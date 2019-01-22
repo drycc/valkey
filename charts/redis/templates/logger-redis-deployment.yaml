@@ -21,7 +21,7 @@ spec:
     spec:
       containers:
       - name: drycc-logger-redis
-        image: quay.io/{{ .Values.org }}/redis:{{ .Values.docker_tag }}
+        image: {{.Values.docker_registry}}{{ .Values.org }}/redis:{{ .Values.docker_tag }}
         imagePullPolicy: {{ .Values.pull_policy }}
 {{- if or (.Values.limits_cpu) (.Values.limits_memory)}}
         resources:
