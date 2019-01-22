@@ -2,12 +2,12 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: deis-logger-redis
+  name: drycc-logger-redis
   labels:
     heritage: helm
 spec:
   selector:
-    app: deis-logger-redis
+    app: drycc-logger-redis
   ports:
   - port: 6379
 {{- end }}

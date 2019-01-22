@@ -5,11 +5,11 @@ set -eof pipefail
 REDIS_CONFIG_FILE=/etc/redis/redis.conf
 
 # Set password
-REDIS_PASSWORD_FILE=/var/run/secrets/deis/redis/creds/password
+REDIS_PASSWORD_FILE=/var/run/secrets/drycc/redis/creds/password
 if [ -e $REDIS_PASSWORD_FILE ]; then
-    REDIS_PASSWORD="$(cat /var/run/secrets/deis/redis/creds/password)"
+    REDIS_PASSWORD="$(cat /var/run/secrets/drycc/redis/creds/password)"
     if [ ! -z "$REDIS_PASSWORD" ]; then
-        echo "requirepass $REDIS_PASSWOR" >> REDIS_CONFIG_FILE
+        echo "requirepass $REDIS_PASSWORD" >> REDIS_CONFIG_FILE
     fi
 fi
 
