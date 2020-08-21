@@ -13,4 +13,4 @@ if [ -e $REDIS_PASSWORD_FILE ]; then
     fi
 fi
 
-exec redis-server $REDIS_CONFIG_FILE
+exec redis-server $REDIS_CONFIG_FILE "$@"

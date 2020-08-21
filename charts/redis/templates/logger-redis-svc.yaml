@@ -4,10 +4,11 @@ kind: Service
 metadata:
   name: drycc-logger-redis
   labels:
-    heritage: helm
+    heritage: drycc
 spec:
+  clusterIP: None
   selector:
     app: drycc-logger-redis
   ports:
-  - port: 6379
+  - port: {{.Values.port}}
 {{- end }}
