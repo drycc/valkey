@@ -36,10 +36,10 @@ spec:
         ports:
         - containerPort: {{.Values.port}}
         volumeMounts:
-        - name: logger-redis-creds
+        - name: redis-creds
           mountPath: /var/run/secrets/drycc/redis/creds
       volumes:
-      - name: logger-redis-creds
+      - name: redis-creds
         secret:
-          secretName: logger-redis-creds
+          secretName: redis-creds
 {{- end }}
