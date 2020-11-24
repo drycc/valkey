@@ -2,24 +2,24 @@
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: drycc-logger-redis
+  name: drycc-redis
   labels:
     heritage: drycc
   annotations:
     component.drycc.cc/version: {{ .Values.docker_tag }}
 spec:
-  serviceName: drycc-logger-redis
+  serviceName: drycc-redis
   replicas: {{ .Values.replicas }}
   selector:
     matchLabels:
-      app: drycc-logger-redis
+      app: drycc-redis
   template:
     metadata:
       labels:
-        app: drycc-logger-redis
+        app: drycc-redis
     spec:
       containers:
-      - name: drycc-logger-redis
+      - name: drycc-redis
         image: {{.Values.docker_registry}}{{ .Values.org }}/redis:{{ .Values.docker_tag }}
         imagePullPolicy: {{ .Values.pull_policy }}
 {{- if or (.Values.limits_cpu) (.Values.limits_memory)}}
