@@ -1,4 +1,4 @@
-FROM redis:6-alpine
+FROM docker.io/library/redis:6-alpine
 
 COPY . /
 
