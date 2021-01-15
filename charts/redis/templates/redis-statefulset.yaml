@@ -32,9 +32,9 @@ spec:
             memory: {{.Values.limits_memory}}
 {{- end}}
 {{- end}}
-        command: ["/bin/boot", "--port", "{{.Values.port}}"]
+        command: ["/bin/boot", "--port", "6379"]
         ports:
-        - containerPort: {{.Values.port}}
+        - containerPort: 6379
         volumeMounts:
         - name: redis-creds
           mountPath: /var/run/secrets/drycc/redis/creds
