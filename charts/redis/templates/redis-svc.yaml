@@ -10,5 +10,5 @@ spec:
   selector:
     app: drycc-redis
   ports:
-  - port: {{.Values.port}}
+  - port: 6379
 {{- end }}
