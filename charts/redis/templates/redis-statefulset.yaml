@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
       - name: drycc-redis
-        image: {{.Values.image_registry}}/{{ .Values.org }}/redis:{{ .Values.image_tag }}
+        image: {{.Values.image_registry}}/{{.Values.image_org}}/redis:{{ .Values.image_tag }}
         imagePullPolicy: {{ .Values.image_pull_policy }}
 {{- if or (.Values.limits_cpu) (.Values.limits_memory)}}
         resources:
