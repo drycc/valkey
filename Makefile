@@ -3,7 +3,7 @@
 # - Docker image name
 # - Kubernetes service, rc, pod, secret, volume names
 SHORT_NAME := redis
-DRYCC_REGISTY ?= ${DEV_REGISTRY}
+DRYCC_REGISTRY ?= ${DEV_REGISTRY}
 IMAGE_PREFIX ?= drycc
 PLATFORM ?= linux/amd64,linux/arm64
 
