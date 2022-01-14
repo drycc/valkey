@@ -1,4 +1,4 @@
-{{- if eq .Values.global.redis_location "on-cluster" }}
+{{- if eq .Values.global.redisLocation "on-cluster" }}
 apiVersion: v1
 kind: Service
 metadata:

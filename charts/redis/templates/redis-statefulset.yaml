@@ -1,4 +1,4 @@
-{{- if eq .Values.global.redis_location "on-cluster" }}
+{{- if eq .Values.global.redisLocation "on-cluster" }}
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -6,7 +6,7 @@ metadata:
   labels:
     heritage: drycc
   annotations:
-    component.drycc.cc/version: {{ .Values.image_tag }}
+    component.drycc.cc/version: {{ .Values.imageTag }}
 spec:
   serviceName: drycc-redis
   replicas: {{ .Values.replicas }}
@@ -20,16 +20,16 @@ spec:
     spec:
       containers:
       - name: drycc-redis
-        image: {{.Values.image_registry}}/{{.Values.image_org}}/redis:{{ .Values.image_tag }}
-        imagePullPolicy: {{ .Values.image_pull_policy }}
-{{- if or (.Values.limits_cpu) (.Values.limits_memory)}}
+        image: {{.Values.imageRegistry}}/{{.Values.imageOrg}}/redis:{{ .Values.imageTag }}
+        imagePullPolicy: {{ .Values.imagePullPolicy }}
+{{- if or (.Values.limitsCpu) (.Values.limitsMemory)}}
         resources:
           limits:
-{{- if (.Values.limits_cpu) }}
-            cpu: {{.Values.limits_cpu}}
+{{- if (.Values.limitsCpu) }}
+            cpu: {{.Values.limitsCpu}}
 {{- end}}
-{{- if (.Values.limits_memory) }}
-            memory: {{.Values.limits_memory}}
+{{- if (.Values.limitsMemory) }}
+            memory: {{.Values.limitsMemory}}
 {{- end}}
 {{- end}}
         command: ["/bin/boot", "--port", "6379"]
