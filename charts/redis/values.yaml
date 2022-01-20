@@ -5,6 +5,18 @@ imageRegistry: "docker.io"
 # limitsCpu: "100m"
 # limitsMemory: "50Mi"
 
+# The following parameters are configured only when using an on-cluster Redis instance
+replicas: 1
+
+# The following parameters are configured only when using an off-cluster Redis instance
+addrs: "" # A list of clusters: "127.0.0.1:7001/1,127.0.0.2:7002/1"
+password: "redis password" # "" == no password
+# GCP PDs and EBS volumes are supported only
+persistence:
+  enabled: false # Set to true to enable persistence
+  size: 5Gi
+  storageClass: ""
+
 global:
   # Set the location of Workflow's redis instance
   #
@@ -12,10 +24,3 @@ global:
   # - on-cluster: Run Redis within the Kubernetes cluster
   # - off-cluster: Run Redis outside the Kubernetes cluster (configure in redis section)
   redisLocation: "on-cluster"
-
-# The following parameters are configured only when using an on-cluster Redis instance
-replicas: 1
-
-# The following parameters are configured only when using an off-cluster Redis instance
-addrs: "" # A list of clusters: "127.0.0.1:7001/1,127.0.0.2:7002/1"
-password: "redis password" # "" == no password
