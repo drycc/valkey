@@ -1,11 +1,11 @@
 FROM docker.io/drycc/base:bullseye
 
-RUN adduser --system \
-   --shell /bin/bash \
-   --disabled-password \
-   --home /data \
-   --group \
-   redis
+ARG DRYCC_UID=1001
+ARG DRYCC_GID=1001
+ARG DRYCC_HOME_DIR=/data
+
+RUN groupadd drycc --gid ${DRYCC_GID} \
+  && useradd drycc -u ${DRYCC_UID} -g ${DRYCC_GID} -s /bin/bash -m -d ${DRYCC_HOME_DIR}
 
 COPY bin/boot /bin/boot
 COPY etc/redis/redis.conf /etc/redis/redis.conf
@@ -26,8 +26,9 @@ RUN install-stack redis $REDIS_VERSION \
       /usr/lib/`echo $(uname -m)`-linux-gnu/gconv/IBM* \
       /usr/lib/`echo $(uname -m)`-linux-gnu/gconv/EBC* \
   && bash -c "mkdir -p /usr/share/man/man{1..8}" \
-  && chown -R redis:redis /etc/redis /data
+  && chown -R drycc:drycc /etc/redis ${DRYCC_HOME_DIR}
 
-USER redis
+USER drycc
+WORKDIR ${DRYCC_HOME_DIR}
 CMD ["/bin/boot"]
 EXPOSE 6379
