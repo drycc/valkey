@@ -18,6 +18,9 @@ spec:
       labels:
         app: drycc-redis
     spec:
+      {{- if .Values.global.common }}
+      {{- include "common.affinity" (dict "key" "app" "values" (list "drycc-redis")) | indent 6 }}
+      {{- end }}
       containers:
       - name: drycc-redis
         image: {{.Values.imageRegistry}}/{{.Values.imageOrg}}/redis:{{ .Values.imageTag }}
