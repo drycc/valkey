@@ -1,7 +1,12 @@
 name: redis
 home: https://github.com/drycc/redis
-version: v1.0.0
+apiVersion: v2
+dependencies:
+  - name: common
+    repository: https://charts.drycc.cc/stable
+    version: 1.x.x
 description: A Redis database for use inside a Kubernetes cluster.
 maintainers:
   - name: Drycc Team
     email: engineering@drycc.com
+version: v1.0.0
