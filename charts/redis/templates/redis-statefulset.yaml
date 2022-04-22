@@ -39,10 +39,14 @@ spec:
         - "6379"
         ports:
         - containerPort: 6379
-        volumeMounts:
-        - name: redis-creds
-          mountPath: /var/run/secrets/drycc/redis/creds
         {{- if .Values.persistence.enabled }}
+        env:
+        - name: DRYCC_REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: redis-creds
+              key: password
+        volumeMounts:
         - name: redis-data
           mountPath: /data
         {{- end }}
@@ -50,10 +54,6 @@ spec:
         fsGroup: 1001
         runAsGroup: 1001
         runAsUser: 1001
-      volumes:
-      - name: redis-creds
-        secret:
-          secretName: redis-creds
   {{- if .Values.persistence.enabled }}
   volumeClaimTemplates:
   - metadata:

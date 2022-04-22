@@ -5,12 +5,8 @@ set -eof pipefail
 REDIS_CONFIG_FILE=/etc/redis/redis.conf
 
 # Set password
-REDIS_PASSWORD_FILE=/var/run/secrets/drycc/redis/creds/password
-if [ -e $REDIS_PASSWORD_FILE ]; then
-    REDIS_PASSWORD="$(cat /var/run/secrets/drycc/redis/creds/password)"
-    if [ -n "$REDIS_PASSWORD" ]; then
-        printf "\nrequirepass %s" "$REDIS_PASSWORD" >> $REDIS_CONFIG_FILE
-    fi
+if [ -n "$DRYCC_REDIS_PASSWORD" ]; then
+    printf "\nrequirepass %s" "$DRYCC_REDIS_PASSWORD" >> $REDIS_CONFIG_FILE
 fi
 
 exec redis-server $REDIS_CONFIG_FILE "$@"
