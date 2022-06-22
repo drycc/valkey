@@ -9,4 +9,4 @@ description: A Redis database for use inside a Kubernetes cluster.
 maintainers:
   - name: Drycc Team
     email: engineering@drycc.com
-version: v1.0.0
+version: v1.1.0
