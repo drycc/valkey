@@ -42,13 +42,13 @@ spec:
         - "6379"
         ports:
         - containerPort: 6379
-        {{- if .Values.persistence.enabled }}
         env:
         - name: DRYCC_REDIS_PASSWORD
           valueFrom:
             secretKeyRef:
               name: redis-creds
               key: password
+        {{- if .Values.persistence.enabled }}
         volumeMounts:
         - name: redis-data
           mountPath: /data
