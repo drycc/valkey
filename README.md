@@ -1,5 +1,5 @@
 # Drycc Redis
-[![Build Status](https://drone.drycc.cc/api/badges/drycc/redis/status.svg)](https://drone.drycc.cc/drycc/redis)
+[![Build Status](https://woodpecker.drycc.cc/api/badges/drycc/redis/status.svg)](https://woodpecker.drycc.cc/drycc/redis)
 
 Drycc (pronounced DAY-iss) Workflow is an open source Platform as a Service (PaaS) that adds a developer-friendly layer to any [Kubernetes](http://kubernetes.io) cluster, making it easy to deploy and manage applications on your own servers.
 
