@@ -1,6 +1,7 @@
 name: redis
 home: https://github.com/drycc/redis
 apiVersion: v2
+appVersion: 1.0.0
 dependencies:
   - name: common
     repository: oci://registry.drycc.cc/charts
