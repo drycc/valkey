@@ -12,16 +12,14 @@ nodeAffinityPreset:
   - "true"
 
 podAffinityPreset:
-  key: "security"
   type: ""
-  values:
-  - "drycc-security"
+  extraMatchLabels:
+    security: "drycc-security"
 
 podAntiAffinityPreset:
-  key: "app"
   type: "soft"
-  values:
-  - "drycc-redis"
+  extraMatchLabels:
+    app: "drycc-redis"
 
 # The following parameters are configured only when using an on-cluster Redis instance
 replicas: 1
