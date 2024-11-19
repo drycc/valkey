@@ -1,8 +1,8 @@
-{{- if eq .Values.global.redisLocation "on-cluster" }}
+{{- if eq .Values.global.valkeyLocation "on-cluster" }}
 apiVersion: v1
 kind: Service
 metadata:
-  name: drycc-redis
+  name: drycc-valkey
   annotations:
     {{- with .Values.service.annotations }}
     {{- toYaml . | nindent 4 }}
@@ -12,5 +12,5 @@ metadata:
 spec:
   clusterIP: None
   selector:
-    app: drycc-redis
+    app: drycc-valkey
 {{- end }}

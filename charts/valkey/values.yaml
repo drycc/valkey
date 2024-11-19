@@ -34,14 +34,14 @@ podAffinityPreset:
 podAntiAffinityPreset:
   type: "soft"
   extraMatchLabels:
-    app: "drycc-redis"
+    app: "drycc-valkey"
 
-# The following parameters are configured only when using an on-cluster Redis instance
+# The following parameters are configured only when using an on-cluster Valkey instance
 replicas: 1
 
-# The following parameters are configured only when using an off-cluster Redis instance
+# The following parameters are configured only when using an off-cluster Valkey instance
 addrs: "" # A list of clusters: "127.0.0.1:7001/1,127.0.0.2:7002/1"
-password: "redis password" # "" == no password
+password: "valkey password" # "" == no password
 
 # Service
 service:
@@ -55,9 +55,9 @@ persistence:
   storageClass: ""
 
 global:
-  # Set the location of Workflow's redis instance
+  # Set the location of Workflow's valkey instance
   #
   # Valid values are:
-  # - on-cluster: Run Redis within the Kubernetes cluster
-  # - off-cluster: Run Redis outside the Kubernetes cluster (configure in redis section)
-  redisLocation: "on-cluster"
+  # - on-cluster: Run Valkey within the Kubernetes cluster
+  # - off-cluster: Run Valkey outside the Kubernetes cluster (configure in valkey section)
+  valkeyLocation: "on-cluster"

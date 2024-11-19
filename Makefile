@@ -2,7 +2,7 @@
 # Some uses for short name:
 # - Container image name
 # - Kubernetes service, rc, pod, secret, volume names
-SHORT_NAME := redis
+SHORT_NAME := valkey
 DRYCC_REGISTRY ?= ${DEV_REGISTRY}
 IMAGE_PREFIX ?= drycc
 PLATFORM ?= linux/amd64,linux/arm64
@@ -29,7 +29,8 @@ podman-build:
 	podman build --build-arg CODENAME=${CODENAME} -t ${IMAGE} rootfs
 	podman tag ${IMAGE} ${MUTABLE_IMAGE}
 
-test: test-style
+test: podman-build test-style
+	./_test/test.sh ${VERSION}
 
 test-style:
 	${DEV_ENV_CMD} shellcheck $(SHELL_SCRIPTS)
