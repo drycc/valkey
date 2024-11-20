@@ -9,8 +9,9 @@ ENV DRYCC_UID=1001 \
 RUN groupadd drycc --gid ${DRYCC_GID} \
   && useradd drycc -u ${DRYCC_UID} -g ${DRYCC_GID} -s /bin/bash -m -d ${DRYCC_HOME_DIR}
 
-COPY bin/boot /bin/boot
-COPY etc/valkey/valkey.conf /etc/valkey/valkey.conf
+COPY scripts /scripts
+COPY etc/valkey /etc/valkey
+COPY bin/valkey-start /bin/valkey-start
 
 RUN install-stack valkey ${VALKEY_VERSION} \
   && rm -rf \
@@ -31,5 +32,4 @@ RUN install-stack valkey ${VALKEY_VERSION} \
 
 USER ${DRYCC_UID}
 WORKDIR ${DRYCC_HOME_DIR}
-CMD ["/bin/boot"]
-EXPOSE 6379
+EXPOSE 6379 26379

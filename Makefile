@@ -9,7 +9,7 @@ PLATFORM ?= linux/amd64,linux/arm64
 
 include versioning.mk
 
-SHELL_SCRIPTS = $(wildcard _scripts/*.sh) rootfs/bin/boot
+SHELL_SCRIPTS = $(wildcard _test/*.sh) rootfs/bin/valkey-start rootfs/scripts/*
 
 # The following variables describe the containerized development environment
 # and other build options

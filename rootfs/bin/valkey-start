@@ -1,0 +1,100 @@
+#!/usr/bin/env bash
+
+# shellcheck disable=SC1091
+. /scripts/init.sh
+
+print_usage() {
+    echo "Valid commands for valkey-start:"
+    echo ""
+    echo "server <announce-host>              start valkey server"
+    echo "sentinel <announce-host>            start valkey sentinel"
+    echo ""
+    echo "Such as 'weed-start server valkey.valkey.svc.cluster.local' to start valkey server."
+}
+
+remove_in_file() {
+    local filename="${1:?filename is required}"
+    local match_regex="^\s*${2:?match regex is required} .*"
+    sed -i "/$match_regex/d" "$filename"
+}
+
+get_master_info() {
+    export REDISCLI_AUTH=${DRYCC_VALKEY_PASSWORD}
+    command="valkey-cli -h ${DRYCC_VALKEY_SENTINEL} -p ${SENTINEL_PORT} sentinel get-master-addr-by-name drycc 2>>/dev/null"
+    eval "$command"
+}
+
+start_valkey_server() {
+    announce_ip="$1"
+    VALKEY_CONFIG_FILE=/data/server/valkey.conf
+    if [ ! -f ${VALKEY_CONFIG_FILE} ]; then
+        cp -rf /etc/valkey/valkey-default.conf ${VALKEY_CONFIG_FILE}
+    fi
+
+    # Clean old
+    remove_in_file ${VALKEY_CONFIG_FILE} masterauth
+    remove_in_file ${VALKEY_CONFIG_FILE} requirepass
+    remove_in_file ${VALKEY_CONFIG_FILE} replicaof
+    remove_in_file ${VALKEY_CONFIG_FILE} replica-announce-ip
+    remove_in_file ${VALKEY_CONFIG_FILE} replica-announce-port
+    {
+        printf "\nmasterauth %s" "${DRYCC_VALKEY_PASSWORD}"
+        printf "\nrequirepass %s" "${DRYCC_VALKEY_PASSWORD}"
+        printf "\nreplica-announce-ip %s" "${announce_ip}"
+        printf "\nreplica-announce-port %s" "${SERVER_PORT}"
+    } >> ${VALKEY_CONFIG_FILE}
+    # Set server slaveof
+    if get_master_info; then
+        # shellcheck disable=SC2207
+        master_info=($(get_master_info))
+        if [ "${master_info[0]}" != "${announce_ip}" ]; then
+            printf "\nreplicaof %s %s" "${master_info[0]}" "${master_info[1]}" >> "${VALKEY_CONFIG_FILE}"
+        fi
+    fi
+    exec valkey-server "${VALKEY_CONFIG_FILE}"
+}
+
+start_valkey_sentinel() {
+    announce_ip="$1"
+    VALKEY_SENTINEL_CONFIG_FILE=/data/sentinel/valkey-sentinel.conf
+    if [ ! -f ${VALKEY_SENTINEL_CONFIG_FILE} ]; then
+        cp -rf /etc/valkey/valkey-sentinel-default.conf ${VALKEY_SENTINEL_CONFIG_FILE}
+    fi
+
+    # Clean old
+    remove_in_file ${VALKEY_SENTINEL_CONFIG_FILE} masterauth
+    remove_in_file ${VALKEY_SENTINEL_CONFIG_FILE} requirepass
+    remove_in_file ${VALKEY_SENTINEL_CONFIG_FILE} primaryauth
+    remove_in_file ${VALKEY_SENTINEL_CONFIG_FILE} "sentinel auth-pass"
+    remove_in_file ${VALKEY_SENTINEL_CONFIG_FILE} "sentinel announce-ip"
+    remove_in_file ${VALKEY_SENTINEL_CONFIG_FILE} "sentinel announce-port"
+    remove_in_file ${VALKEY_SENTINEL_CONFIG_FILE} "sentinel monitor"
+
+    # Set sentinel config
+    {
+        printf "\nmasterauth %s" "${DRYCC_VALKEY_PASSWORD}"
+        printf "\nrequirepass %s" "${DRYCC_VALKEY_PASSWORD}"
+        printf "\nprimaryauth %s" "${DRYCC_VALKEY_PASSWORD}"
+        printf "\nsentinel auth-pass drycc %s" "${DRYCC_VALKEY_PASSWORD}"
+        printf "\nsentinel announce-ip %s" "${announce_ip}"
+        printf "\nsentinel announce-port %s" "${SENTINEL_PORT}"
+    } >> ${VALKEY_SENTINEL_CONFIG_FILE}
+
+    # Set monitor
+    if get_master_info; then
+        # shellcheck disable=SC2207
+        master_info=($(get_master_info))
+        printf "\nsentinel monitor drycc %s %s 2" "${master_info[0]}" "${master_info[1]}" >> ${VALKEY_SENTINEL_CONFIG_FILE}
+    else
+        printf "\nsentinel monitor drycc %s %s 2" "${announce_ip}" "${SERVER_PORT}" >> ${VALKEY_SENTINEL_CONFIG_FILE}
+    fi
+    exec valkey-sentinel $VALKEY_SENTINEL_CONFIG_FILE
+}
+
+command="$1"
+if [[ ${command} == "server" || ${command} == "sentinel" ]]; then
+    "start_valkey_$command" "$2"
+else
+    print_usage
+    exit 1
+fi

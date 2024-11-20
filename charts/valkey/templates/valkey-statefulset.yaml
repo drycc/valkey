@@ -23,7 +23,7 @@ spec:
         podAntiAffinity: {{- include "common.affinities.pods" (dict "type" .Values.podAntiAffinityPreset.type "component" "" "extraMatchLabels" .Values.podAntiAffinityPreset.extraMatchLabels "topologyKey" "" "context" $) | nindent 10 }}
         nodeAffinity: {{- include "common.affinities.nodes" (dict "type" .Values.nodeAffinityPreset.type "key" .Values.nodeAffinityPreset.key "values" .Values.nodeAffinityPreset.values ) | nindent 10 }}
       containers:
-      - name: drycc-valkey
+      - name: server
         image: {{.Values.imageRegistry}}/{{.Values.imageOrg}}/valkey:{{ .Values.imageTag }}
         imagePullPolicy: {{ .Values.imagePullPolicy }}
         {{- if or (.Values.limitsCpu) (.Values.limitsMemory)}}
@@ -41,23 +41,150 @@ spec:
         args: {{- include "common.tplvalues.render" (dict "value" .Values.diagnosticMode.args "context" $) | nindent 10 }}
         {{- else }}
         args:
-        - "/bin/boot"
-        - "--port"
-        - "6379"
+        - valkey-start
+        - server
+        - $(POD_NAME).{{ printf "drycc-valkey.%s.svc.%s" $.Release.Namespace $.Values.global.clusterDomain }}
         {{- end }}
         ports:
         - containerPort: 6379
         env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: DRYCC_VALKEY_SENTINEL
+          value: {{ printf "drycc-valkey.%s.svc.%s" $.Release.Namespace $.Values.global.clusterDomain }}
         - name: DRYCC_VALKEY_PASSWORD
           valueFrom:
             secretKeyRef:
               name: valkey-creds
               key: password
+        startupProbe:
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 22
+          tcpSocket:
+            port: 6379
+        livenessProbe:
+          initialDelaySeconds: 20
+          periodSeconds: 5
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 5
+          exec:
+            command:
+              - init-stack
+              - sh
+              - -c
+              - /scripts/ping_liveness_local.sh 5
+        readinessProbe:
+          initialDelaySeconds: 20
+          periodSeconds: 5
+          timeoutSeconds: 1
+          successThreshold: 1
+          failureThreshold: 5
+          exec:
+            command:
+              - init-stack
+              - sh
+              - -c
+              - /scripts/ping_readiness_local.sh 1
         {{- if .Values.persistence.enabled }}
         volumeMounts:
         - name: valkey-data
           mountPath: /data
         {{- end }}
+        lifecycle:
+          preStop:
+            exec:
+              command:
+                - init-stack
+                - /bin/bash
+                - -c
+                - /scripts/prestop-valkey.sh
+      - name: sentinel
+        image: {{.Values.imageRegistry}}/{{.Values.imageOrg}}/valkey:{{ .Values.imageTag }}
+        imagePullPolicy: {{ .Values.imagePullPolicy }}
+        {{- if or (.Values.limitsCpu) (.Values.limitsMemory)}}
+        resources:
+          limits:
+            {{- if (.Values.limitsCpu) }}
+            cpu: {{.Values.limitsCpu}}
+            {{- end}}
+            {{- if (.Values.limitsMemory) }}
+            memory: {{.Values.limitsMemory}}
+            {{- end}}
+        {{- end}}
+        {{- if .Values.diagnosticMode.enabled }}
+        command: {{- include "common.tplvalues.render" (dict "value" .Values.diagnosticMode.command "context" $) | nindent 10 }}
+        args: {{- include "common.tplvalues.render" (dict "value" .Values.diagnosticMode.args "context" $) | nindent 10 }}
+        {{- else }}
+        args:
+        - valkey-start
+        - sentinel
+        - $(POD_NAME).{{ printf "drycc-valkey.%s.svc.%s" $.Release.Namespace $.Values.global.clusterDomain }}
+        {{- end }}
+        ports:
+        - containerPort: 26379
+        env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: DRYCC_VALKEY_SENTINEL
+          value: {{ printf "drycc-valkey.%s.svc.%s" $.Release.Namespace $.Values.global.clusterDomain }}
+        - name: DRYCC_VALKEY_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: valkey-creds
+              key: password
+        startupProbe:
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 22
+          tcpSocket:
+            port: 26379
+        livenessProbe:
+          initialDelaySeconds: 20
+          periodSeconds: 5
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 5
+          exec:
+            command:
+            - init-stack
+            - sh
+            - -c
+            - /scripts/ping_sentinel.sh 5
+        readinessProbe:
+          initialDelaySeconds: 20
+          periodSeconds: 5
+          timeoutSeconds: 1
+          successThreshold: 1
+          failureThreshold: 5
+          exec:
+            command:
+            - init-stack
+            - sh
+            - -c
+            - /scripts/ping_sentinel.sh 1
+        {{- if .Values.persistence.enabled }}
+        volumeMounts:
+        - name: valkey-data
+          mountPath: /data
+        {{- end }}
+        lifecycle:
+          preStop:
+            exec:
+              command:
+                - init-stack
+                - /bin/bash
+                - -c
+                - /scripts/prestop-sentinel.sh
       securityContext:
         fsGroup: 1001
         runAsGroup: 1001

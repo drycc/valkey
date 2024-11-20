@@ -11,6 +11,16 @@ metadata:
     heritage: drycc
 spec:
   clusterIP: None
+  publishNotReadyAddresses: true
+  ports:
+  - name: server
+    port: 6379
+    targetPort: 6379
+    protocol: TCP
+  - name: sentinel
+    port: 26379
+    targetPort: 26379
+    protocol: TCP
   selector:
     app: drycc-valkey
 {{- end }}
