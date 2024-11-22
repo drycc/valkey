@@ -6,10 +6,11 @@
 print_usage() {
     echo "Valid commands for valkey-start:"
     echo ""
+    echo "proxy <announce-host>               start valkey proxy"
     echo "server <announce-host>              start valkey server"
     echo "sentinel <announce-host>            start valkey sentinel"
     echo ""
-    echo "Such as 'weed-start server valkey.valkey.svc.cluster.local' to start valkey server."
+    echo "Such as 'valkey-start server valkey.valkey.svc.cluster.local' to start valkey server."
 }
 
 remove_in_file() {
@@ -22,6 +23,15 @@ get_master_info() {
     export REDISCLI_AUTH=${DRYCC_VALKEY_PASSWORD}
     command="valkey-cli -h ${DRYCC_VALKEY_SENTINEL} -p ${SENTINEL_PORT} sentinel get-master-addr-by-name drycc 2>>/dev/null"
     eval "$command"
+}
+
+start_valkey_proxy() {
+    exec valkey-sentinel-proxy \
+        --listen=:16379 \
+        --master=drycc \
+        --max-procs=4 \
+        --sentinel-addr="${DRYCC_VALKEY_SENTINEL}":26379 \
+        --sentinel-pass="${DRYCC_VALKEY_PASSWORD}"
 }
 
 start_valkey_server() {
@@ -92,7 +102,7 @@ start_valkey_sentinel() {
 }
 
 command="$1"
-if [[ ${command} == "server" || ${command} == "sentinel" ]]; then
+if [[ ${command} == "proxy" || ${command} == "server" || ${command} == "sentinel" ]]; then
     "start_valkey_$command" "$2"
 else
     print_usage

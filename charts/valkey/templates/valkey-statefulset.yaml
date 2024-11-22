@@ -23,6 +23,51 @@ spec:
         podAntiAffinity: {{- include "common.affinities.pods" (dict "type" .Values.podAntiAffinityPreset.type "component" "" "extraMatchLabels" .Values.podAntiAffinityPreset.extraMatchLabels "topologyKey" "" "context" $) | nindent 10 }}
         nodeAffinity: {{- include "common.affinities.nodes" (dict "type" .Values.nodeAffinityPreset.type "key" .Values.nodeAffinityPreset.key "values" .Values.nodeAffinityPreset.values ) | nindent 10 }}
       containers:
+      - name: proxy
+        image: {{.Values.imageRegistry}}/{{.Values.imageOrg}}/valkey:{{ .Values.imageTag }}
+        imagePullPolicy: {{ .Values.imagePullPolicy }}
+        {{- if .Values.diagnosticMode.enabled }}
+        command: {{- include "common.tplvalues.render" (dict "value" .Values.diagnosticMode.command "context" $) | nindent 10 }}
+        args: {{- include "common.tplvalues.render" (dict "value" .Values.diagnosticMode.args "context" $) | nindent 10 }}
+        {{- else }}
+        args:
+        - valkey-start
+        - proxy
+        {{- end }}
+        env:
+        - name: DRYCC_VALKEY_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: valkey-creds
+              key: password
+        - name: DRYCC_VALKEY_SENTINEL
+          value: {{ printf "drycc-valkey.%s.svc.%s" $.Release.Namespace $.Values.global.clusterDomain }}
+        ports:
+        - containerPort: 16379
+        startupProbe:
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 22
+          tcpSocket:
+            port: 16379
+        livenessProbe:
+          initialDelaySeconds: 20
+          periodSeconds: 5
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 5
+          tcpSocket:
+            port: 16379
+        readinessProbe:
+          initialDelaySeconds: 20
+          periodSeconds: 5
+          timeoutSeconds: 1
+          successThreshold: 1
+          failureThreshold: 5
+          tcpSocket:
+            port: 16379
       - name: server
         image: {{.Values.imageRegistry}}/{{.Values.imageOrg}}/valkey:{{ .Values.imageTag }}
         imagePullPolicy: {{ .Values.imagePullPolicy }}
