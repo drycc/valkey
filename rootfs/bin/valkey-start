@@ -98,7 +98,7 @@ start_valkey_sentinel() {
     else
         printf "\nsentinel monitor drycc %s %s 2" "${announce_ip}" "${SERVER_PORT}" >> ${VALKEY_SENTINEL_CONFIG_FILE}
     fi
-    exec valkey-sentinel $VALKEY_SENTINEL_CONFIG_FILE
+    exec valkey-server $VALKEY_SENTINEL_CONFIG_FILE --sentinel
 }
 
 command="$1"

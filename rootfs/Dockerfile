@@ -4,7 +4,7 @@ FROM registry.drycc.cc/drycc/base:${CODENAME}
 ENV DRYCC_UID=1001 \
   DRYCC_GID=1001 \
   DRYCC_HOME_DIR=/data \
-  VALKEY_VERSION="8.1.0" \
+  VALKEY_VERSION="8.1.1" \
   VALKEY_SENTINEL_PROXY_VERSION="1.0.2"
 
 RUN groupadd drycc --gid ${DRYCC_GID} \

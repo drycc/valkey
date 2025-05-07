@@ -1,4 +1,3 @@
-{{- if eq .Values.global.valkeyLocation "on-cluster" }}
 apiVersion: v1
 kind: Service
 metadata:
@@ -27,4 +26,3 @@ spec:
     protocol: TCP
   selector:
     app: drycc-valkey
-{{- end }}
