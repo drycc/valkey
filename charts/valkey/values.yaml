@@ -2,8 +2,6 @@ imageOrg: "drycc"
 imagePullPolicy: "Always"
 imageTag: "canary"
 imageRegistry: "registry.drycc.cc"
-# limitsCpu: "100m"
-# limitsMemory: "50Mi"
 
 ## Enable diagnostic mode
 ##
@@ -43,6 +41,33 @@ replicas: 3
 service:
   # Provide any additional service annotations
   annotations: {}
+
+proxy:
+  resources: {}
+    # limits:
+    #   cpu: 200m
+    #   memory: 50Mi
+    # requests:
+    #   cpu: 100m
+    #   memory: 30Mi
+
+server:
+  resources: {}
+    # limits:
+    #   cpu: 200m
+    #   memory: 50Mi
+    # requests:
+    #   cpu: 100m
+    #   memory: 30Mi
+
+sentinel:
+  resources: {}
+    # limits:
+    #   cpu: 200m
+    #   memory: 50Mi
+    # requests:
+    #   cpu: 100m
+    #   memory: 30Mi
 
 # GCP PDs and EBS volumes are supported only
 persistence:

@@ -43,6 +43,10 @@ spec:
           value: {{ printf "drycc-valkey.%s.svc.%s" $.Release.Namespace $.Values.global.clusterDomain }}
         ports:
         - containerPort: 16379
+        {{- with index .Values "proxy" "resources" }}
+        resources:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
         startupProbe:
           initialDelaySeconds: 10
           periodSeconds: 10
@@ -70,16 +74,6 @@ spec:
       - name: server
         image: {{.Values.imageRegistry}}/{{.Values.imageOrg}}/valkey:{{ .Values.imageTag }}
         imagePullPolicy: {{ .Values.imagePullPolicy }}
-        {{- if or (.Values.limitsCpu) (.Values.limitsMemory)}}
-        resources:
-          limits:
-            {{- if (.Values.limitsCpu) }}
-            cpu: {{.Values.limitsCpu}}
-            {{- end}}
-            {{- if (.Values.limitsMemory) }}
-            memory: {{.Values.limitsMemory}}
-            {{- end}}
-        {{- end}}
         {{- if .Values.diagnosticMode.enabled }}
         command: {{- include "common.tplvalues.render" (dict "value" .Values.diagnosticMode.command "context" $) | nindent 10 }}
         args: {{- include "common.tplvalues.render" (dict "value" .Values.diagnosticMode.args "context" $) | nindent 10 }}
@@ -91,6 +85,10 @@ spec:
         {{- end }}
         ports:
         - containerPort: 6379
+        {{- with index .Values "server" "resources" }}
+        resources:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
         env:
         - name: POD_NAME
           valueFrom:
@@ -151,16 +149,6 @@ spec:
       - name: sentinel
         image: {{.Values.imageRegistry}}/{{.Values.imageOrg}}/valkey:{{ .Values.imageTag }}
         imagePullPolicy: {{ .Values.imagePullPolicy }}
-        {{- if or (.Values.limitsCpu) (.Values.limitsMemory)}}
-        resources:
-          limits:
-            {{- if (.Values.limitsCpu) }}
-            cpu: {{.Values.limitsCpu}}
-            {{- end}}
-            {{- if (.Values.limitsMemory) }}
-            memory: {{.Values.limitsMemory}}
-            {{- end}}
-        {{- end}}
         {{- if .Values.diagnosticMode.enabled }}
         command: {{- include "common.tplvalues.render" (dict "value" .Values.diagnosticMode.command "context" $) | nindent 10 }}
         args: {{- include "common.tplvalues.render" (dict "value" .Values.diagnosticMode.args "context" $) | nindent 10 }}
@@ -172,6 +160,10 @@ spec:
         {{- end }}
         ports:
         - containerPort: 26379
+        {{- with index .Values "sentinel" "resources" }}
+        resources:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
         env:
         - name: POD_NAME
           valueFrom:
