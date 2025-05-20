@@ -22,7 +22,7 @@ spec:
         podAntiAffinity: {{- include "common.affinities.pods" (dict "type" .Values.podAntiAffinityPreset.type "component" "" "extraMatchLabels" .Values.podAntiAffinityPreset.extraMatchLabels "topologyKey" "" "context" $) | nindent 10 }}
         nodeAffinity: {{- include "common.affinities.nodes" (dict "type" .Values.nodeAffinityPreset.type "key" .Values.nodeAffinityPreset.key "values" .Values.nodeAffinityPreset.values ) | nindent 10 }}
       containers:
-      - name: proxy
+      - name: drycc-valkey-proxy
         image: {{.Values.imageRegistry}}/{{.Values.imageOrg}}/valkey:{{ .Values.imageTag }}
         imagePullPolicy: {{ .Values.imagePullPolicy }}
         {{- if .Values.diagnosticMode.enabled }}
@@ -71,7 +71,7 @@ spec:
           failureThreshold: 5
           tcpSocket:
             port: 16379
-      - name: server
+      - name: drycc-valkey-server
         image: {{.Values.imageRegistry}}/{{.Values.imageOrg}}/valkey:{{ .Values.imageTag }}
         imagePullPolicy: {{ .Values.imagePullPolicy }}
         {{- if .Values.diagnosticMode.enabled }}
@@ -146,7 +146,7 @@ spec:
                 - /bin/bash
                 - -c
                 - /scripts/prestop-valkey.sh
-      - name: sentinel
+      - name: drycc-valkey-sentinel
         image: {{.Values.imageRegistry}}/{{.Values.imageOrg}}/valkey:{{ .Values.imageTag }}
         imagePullPolicy: {{ .Values.imagePullPolicy }}
         {{- if .Values.diagnosticMode.enabled }}
@@ -221,6 +221,52 @@ spec:
                 - /bin/bash
                 - -c
                 - /scripts/prestop-sentinel.sh
+      - name: drycc-valkey-metrics
+        image: {{.Values.imageRegistry}}/{{.Values.imageOrg}}/valkey:{{ .Values.imageTag }}
+        imagePullPolicy: {{ .Values.imagePullPolicy }}
+        {{- if .Values.diagnosticMode.enabled }}
+        command: {{- include "common.tplvalues.render" (dict "value" .Values.diagnosticMode.command "context" $) | nindent 10 }}
+        args: {{- include "common.tplvalues.render" (dict "value" .Values.diagnosticMode.args "context" $) | nindent 10 }}
+        {{- else }}
+        command:
+        - init-stack
+        args:
+        - redis_exporter
+        {{- end }}
+        ports:
+        - containerPort: 9121
+        env:
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: valkey-creds
+              key: password
+        startupProbe:
+          initialDelaySeconds: 10
+          tcpSocket:
+              port: 9121
+          periodSeconds: 10
+          timeoutSeconds: 1
+          failureThreshold: 15
+          successThreshold: 1
+        livenessProbe:
+          initialDelaySeconds: 5
+          httpGet:
+            path: /
+            port: 9121
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 6
+          successThreshold: 1
+        readinessProbe:
+          initialDelaySeconds: 5
+          httpGet:
+            path: /
+            port: 9121
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 6
+          successThreshold: 1
       securityContext:
         fsGroup: 1001
         runAsGroup: 1001

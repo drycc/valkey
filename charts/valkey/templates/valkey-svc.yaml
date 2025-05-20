@@ -3,6 +3,9 @@ kind: Service
 metadata:
   name: drycc-valkey
   annotations:
+    prometheus.io/path: /metrics
+    prometheus.io/port: "9121"
+    prometheus.io/scrape: "true"
     {{- with .Values.service.annotations }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
@@ -19,6 +22,10 @@ spec:
   - name: server
     port: 6379
     targetPort: 6379
+    protocol: TCP
+  - name: metrics
+    port: 9121
+    targetPort: 9121
     protocol: TCP
   - name: sentinel
     port: 26379

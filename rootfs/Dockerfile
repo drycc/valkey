@@ -5,7 +5,8 @@ ENV DRYCC_UID=1001 \
   DRYCC_GID=1001 \
   DRYCC_HOME_DIR=/data \
   VALKEY_VERSION="8.1.1" \
-  VALKEY_SENTINEL_PROXY_VERSION="1.0.2"
+  VALKEY_SENTINEL_PROXY_VERSION="1.0.2" \
+  REDIS_EXPORTER_VERSION="1.51.0"
 
 RUN groupadd drycc --gid ${DRYCC_GID} \
   && useradd drycc -u ${DRYCC_UID} -g ${DRYCC_GID} -s /bin/bash -m -d ${DRYCC_HOME_DIR}
@@ -16,6 +17,7 @@ COPY bin/valkey-start /bin/valkey-start
 
 RUN install-stack valkey ${VALKEY_VERSION} \
   && install-stack valkey-sentinel-proxy ${VALKEY_SENTINEL_PROXY_VERSION} \
+  && install-stack redis_exporter $REDIS_EXPORTER_VERSION \
   && rm -rf \
       /usr/share/doc \
       /usr/share/man \
@@ -34,4 +36,4 @@ RUN install-stack valkey ${VALKEY_VERSION} \
 
 USER ${DRYCC_UID}
 WORKDIR ${DRYCC_HOME_DIR}
-EXPOSE 6379 26379
+EXPOSE 6379 9121 26379
