@@ -40,7 +40,7 @@ spec:
               name: valkey-creds
               key: password
         - name: DRYCC_VALKEY_SENTINEL
-          value: {{ printf "drycc-valkey.%s.svc.%s" $.Release.Namespace $.Values.global.clusterDomain }}
+          value: drycc-valkey
         ports:
         - containerPort: 16379
         {{- with index .Values "proxy" "resources" }}
@@ -81,7 +81,7 @@ spec:
         args:
         - valkey-start
         - server
-        - $(POD_NAME).{{ printf "drycc-valkey.%s.svc.%s" $.Release.Namespace $.Values.global.clusterDomain }}
+        - $(POD_NAME).drycc-valkey
         {{- end }}
         ports:
         - containerPort: 6379
@@ -95,7 +95,7 @@ spec:
             fieldRef:
               fieldPath: metadata.name
         - name: DRYCC_VALKEY_SENTINEL
-          value: {{ printf "drycc-valkey.%s.svc.%s" $.Release.Namespace $.Values.global.clusterDomain }}
+          value: drycc-valkey
         - name: DRYCC_VALKEY_PASSWORD
           valueFrom:
             secretKeyRef:
@@ -156,7 +156,7 @@ spec:
         args:
         - valkey-start
         - sentinel
-        - $(POD_NAME).{{ printf "drycc-valkey.%s.svc.%s" $.Release.Namespace $.Values.global.clusterDomain }}
+        - $(POD_NAME).drycc-valkey
         {{- end }}
         ports:
         - containerPort: 26379
@@ -170,7 +170,7 @@ spec:
             fieldRef:
               fieldPath: metadata.name
         - name: DRYCC_VALKEY_SENTINEL
-          value: {{ printf "drycc-valkey.%s.svc.%s" $.Release.Namespace $.Values.global.clusterDomain }}
+          value: drycc-valkey
         - name: DRYCC_VALKEY_PASSWORD
           valueFrom:
             secretKeyRef:

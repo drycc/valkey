@@ -10,7 +10,7 @@ print_usage() {
     echo "server <announce-host>              start valkey server"
     echo "sentinel <announce-host>            start valkey sentinel"
     echo ""
-    echo "Such as 'valkey-start server valkey.valkey.svc.cluster.local' to start valkey server."
+    echo "Such as 'valkey-start server valkey.valkey.svc' to start valkey server."
 }
 
 remove_in_file() {
