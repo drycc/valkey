@@ -2,12 +2,10 @@
 
 VERSION="$1"
 
-CONTAINER_NETWORK="valkey"
 CONTAINER_PROXY_NAME="valkey-benchmark-proxy"
 CONTAINER_MASTER_NAME="valkey-benchmark-master"
 CONTAINER_SLAVE1_NAME="valkey-benchmark-slave1"
 CONTAINER_SLAVE2_NAME="valkey-benchmark-slave2"
-DRYCC_VALKEY_SENTINEL=$CONTAINER_MASTER_NAME
 DRYCC_VALKEY_PASSWORD=123456
 
 function clean_before_exit {
@@ -19,87 +17,71 @@ trap clean_before_exit EXIT
 start-valkey-master() {
     podman run -d \
       --rm \
-      --network "$CONTAINER_NETWORK" \
-      --ip 192.168.253.10 \
-      --add-host="$CONTAINER_MASTER_NAME:192.168.253.10" \
-      --add-host="$CONTAINER_SLAVE1_NAME:192.168.253.11" \
-      --add-host="$CONTAINER_SLAVE2_NAME:192.168.253.12" \
       --env "REDISCLI_AUTH=$DRYCC_VALKEY_PASSWORD" \
-      --env "DRYCC_VALKEY_SENTINEL=$DRYCC_VALKEY_SENTINEL" \
       --env "DRYCC_VALKEY_PASSWORD=$DRYCC_VALKEY_PASSWORD" \
       --name "$CONTAINER_MASTER_NAME" \
       "registry.drycc.cc/drycc/valkey:$VERSION" \
-      valkey-start server $CONTAINER_MASTER_NAME
-    podman exec "$CONTAINER_MASTER_NAME" init-stack valkey-start sentinel $CONTAINER_MASTER_NAME &
+      sleep infinity
+
+    master_ip=$(podman exec "$CONTAINER_MASTER_NAME" hostname -i | tr -d '\r\n')
+    podman exec --env "DRYCC_VALKEY_SENTINEL=$master_ip" "$CONTAINER_MASTER_NAME" init-stack valkey-start server "$master_ip"  &
+    podman exec --env "DRYCC_VALKEY_SENTINEL=$master_ip" "$CONTAINER_MASTER_NAME" init-stack valkey-start sentinel "$master_ip" &
 }
 
 start-valkey-slave1() {
     podman run -d \
       --rm \
-      --network "$CONTAINER_NETWORK" \
-      --ip 192.168.253.11 \
-      --add-host="$CONTAINER_MASTER_NAME:192.168.253.10" \
-      --add-host="$CONTAINER_SLAVE1_NAME:192.168.253.11" \
-      --add-host="$CONTAINER_SLAVE2_NAME:192.168.253.12" \
       --env "REDISCLI_AUTH=$DRYCC_VALKEY_PASSWORD" \
-      --env "DRYCC_VALKEY_SENTINEL=$DRYCC_VALKEY_SENTINEL" \
       --env "DRYCC_VALKEY_PASSWORD=$DRYCC_VALKEY_PASSWORD" \
       --name "$CONTAINER_SLAVE1_NAME" \
       "registry.drycc.cc/drycc/valkey:$VERSION" \
-      valkey-start server $CONTAINER_SLAVE1_NAME
-    podman exec "$CONTAINER_SLAVE1_NAME" init-stack valkey-start sentinel $CONTAINER_SLAVE1_NAME &
+      sleep infinity
+
+    slave1_ip=$(podman exec -it "$CONTAINER_SLAVE1_NAME" hostname -i | tr -d '\r\n')
+    podman exec --env "DRYCC_VALKEY_SENTINEL=$master_ip" "$CONTAINER_SLAVE1_NAME" init-stack valkey-start server "$slave1_ip" &
+    podman exec --env "DRYCC_VALKEY_SENTINEL=$master_ip" "$CONTAINER_SLAVE1_NAME" init-stack valkey-start sentinel "$slave1_ip" &
 }
 
 start-valkey-slave2() {
     podman run -d \
       --rm \
-      --network "$CONTAINER_NETWORK" \
-      --ip 192.168.253.12 \
-      --add-host="$CONTAINER_MASTER_NAME:192.168.253.10" \
-      --add-host="$CONTAINER_SLAVE1_NAME:192.168.253.11" \
-      --add-host="$CONTAINER_SLAVE2_NAME:192.168.253.12" \
       --env "REDISCLI_AUTH=$DRYCC_VALKEY_PASSWORD" \
-      --env "DRYCC_VALKEY_SENTINEL=$DRYCC_VALKEY_SENTINEL" \
       --env "DRYCC_VALKEY_PASSWORD=$DRYCC_VALKEY_PASSWORD" \
       --name "$CONTAINER_SLAVE2_NAME" \
       "registry.drycc.cc/drycc/valkey:$VERSION" \
-      valkey-start server $CONTAINER_SLAVE2_NAME
-    podman exec "$CONTAINER_SLAVE2_NAME" init-stack valkey-start sentinel $CONTAINER_SLAVE2_NAME &
+      sleep infinity
+
+    slave2_ip=$(podman exec -it "$CONTAINER_SLAVE2_NAME" hostname -i | tr -d '\r\n')
+    podman exec --env "DRYCC_VALKEY_SENTINEL=$master_ip" "$CONTAINER_SLAVE2_NAME" init-stack valkey-start server "$slave2_ip" &
+    podman exec --env "DRYCC_VALKEY_SENTINEL=$master_ip" "$CONTAINER_SLAVE2_NAME" init-stack valkey-start sentinel "$slave2_ip" &
 }
 
 start-valkey-proxy() {
     podman run -d \
       --rm \
-      --network "$CONTAINER_NETWORK" \
-      --ip 192.168.253.13 \
-      --add-host="$CONTAINER_MASTER_NAME:192.168.253.10" \
-      --add-host="$CONTAINER_SLAVE1_NAME:192.168.253.11" \
-      --add-host="$CONTAINER_SLAVE2_NAME:192.168.253.12" \
       --env "REDISCLI_AUTH=$DRYCC_VALKEY_PASSWORD" \
-      --env "DRYCC_VALKEY_SENTINEL=$DRYCC_VALKEY_SENTINEL" \
       --env "DRYCC_VALKEY_PASSWORD=$DRYCC_VALKEY_PASSWORD" \
       --name "$CONTAINER_PROXY_NAME" \
       "registry.drycc.cc/drycc/valkey:$VERSION" \
-      valkey-start proxy
+      sleep infinity
+
+    podman exec --env "DRYCC_VALKEY_SENTINEL=$master_ip" "$CONTAINER_PROXY_NAME" init-stack valkey-start proxy &
 }
 
 clean-valkey() {
     {
-        podman stop -i "$CONTAINER_PROXY_NAME"
-        podman stop -i "$CONTAINER_SLAVE1_NAME"
-        podman stop -i "$CONTAINER_SLAVE2_NAME"
-        podman stop -i "$CONTAINER_MASTER_NAME"
-        podman network rm -f "$CONTAINER_NETWORK"
-    } 2>>/dev/null
+        podman kill "$CONTAINER_PROXY_NAME"
+        podman kill "$CONTAINER_SLAVE1_NAME"
+        podman kill "$CONTAINER_SLAVE2_NAME"
+        podman kill "$CONTAINER_MASTER_NAME"
+    } >>/dev/null 2>&1
 }
 
 clean-valkey
-podman network create --subnet=192.168.253.0/24 "$CONTAINER_NETWORK"
 start-valkey-master
 start-valkey-slave1
 start-valkey-slave2
 start-valkey-proxy
-
 echo "run valkey proxy benchmark..."
 podman exec "$CONTAINER_PROXY_NAME" init-stack valkey-benchmark -p 16379 -a $DRYCC_VALKEY_PASSWORD
 
