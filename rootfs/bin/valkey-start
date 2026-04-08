@@ -25,7 +25,23 @@ get_master_info() {
     eval "$command"
 }
 
+wait_for_valkey() {
+    local host="${1:?host is required}"
+    local port="${2:?port is required}"
+    local retries="${3:-30}"
+    log "Waiting for valkey (${host}:${port}) to be ready..."
+    for ((i = 1; i <= retries; i += 1)); do
+        if valkey-cli -h "$host" -p "$port" ping 2>/dev/null | grep -q PONG; then
+            log "Valkey (${host}:${port}) is ready."
+            return 0
+        fi
+        sleep 2s
+    done
+    error "Valkey (${host}:${port}) did not become ready in time"
+}
+
 start_valkey_proxy() {
+    wait_for_valkey "${DRYCC_VALKEY_SENTINEL}" "${SENTINEL_PORT}"
     exec valkey-sentinel-proxy \
         --listen=:16379 \
         --master=drycc \
