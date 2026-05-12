@@ -6,6 +6,7 @@ CONTAINER_PROXY_NAME="valkey-benchmark-proxy"
 CONTAINER_MASTER_NAME="valkey-benchmark-master"
 CONTAINER_SLAVE1_NAME="valkey-benchmark-slave1"
 CONTAINER_SLAVE2_NAME="valkey-benchmark-slave2"
+NETWORK_NAME="valkey-benchmark-net"
 DRYCC_VALKEY_PASSWORD=123456
 
 function clean_before_exit {
@@ -14,9 +15,20 @@ function clean_before_exit {
 }
 trap clean_before_exit EXIT
 
+ensure-network() {
+    # Use a dedicated bridge network so each container gets a unique IP and
+    # can reach its neighbours. The default rootless networking (pasta) makes
+    # every container share the host IP, which breaks master/replica/sentinel
+    # discovery because containers cannot connect to each other by that IP.
+    if ! podman network exists "$NETWORK_NAME" >/dev/null 2>&1; then
+        podman network create "$NETWORK_NAME" >/dev/null
+    fi
+}
+
 start-valkey-master() {
     podman run -d \
       --rm \
+      --network "$NETWORK_NAME" \
       --env "REDISCLI_AUTH=$DRYCC_VALKEY_PASSWORD" \
       --env "DRYCC_VALKEY_PASSWORD=$DRYCC_VALKEY_PASSWORD" \
       --name "$CONTAINER_MASTER_NAME" \
@@ -31,6 +43,7 @@ start-valkey-master() {
 start-valkey-slave1() {
     podman run -d \
       --rm \
+      --network "$NETWORK_NAME" \
       --env "REDISCLI_AUTH=$DRYCC_VALKEY_PASSWORD" \
       --env "DRYCC_VALKEY_PASSWORD=$DRYCC_VALKEY_PASSWORD" \
       --name "$CONTAINER_SLAVE1_NAME" \
@@ -45,6 +58,7 @@ start-valkey-slave1() {
 start-valkey-slave2() {
     podman run -d \
       --rm \
+      --network "$NETWORK_NAME" \
       --env "REDISCLI_AUTH=$DRYCC_VALKEY_PASSWORD" \
       --env "DRYCC_VALKEY_PASSWORD=$DRYCC_VALKEY_PASSWORD" \
       --name "$CONTAINER_SLAVE2_NAME" \
@@ -59,6 +73,7 @@ start-valkey-slave2() {
 start-valkey-proxy() {
     podman run -d \
       --rm \
+      --network "$NETWORK_NAME" \
       --env "REDISCLI_AUTH=$DRYCC_VALKEY_PASSWORD" \
       --env "DRYCC_VALKEY_PASSWORD=$DRYCC_VALKEY_PASSWORD" \
       --name "$CONTAINER_PROXY_NAME" \
@@ -74,10 +89,12 @@ clean-valkey() {
         podman kill "$CONTAINER_SLAVE1_NAME"
         podman kill "$CONTAINER_SLAVE2_NAME"
         podman kill "$CONTAINER_MASTER_NAME"
+        podman network rm -f "$NETWORK_NAME"
     } >>/dev/null 2>&1
 }
 
 clean-valkey
+ensure-network
 start-valkey-master
 start-valkey-slave1
 start-valkey-slave2

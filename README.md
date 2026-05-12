@@ -10,6 +10,7 @@ Different components use different db, as follows:
 * `controller` use db 0
 * `passport` use db 1
 * `grafana` use db 2
+* `builder` use db 3
 * `manager` use db 10
 * `helmbroker` use db 11
 
