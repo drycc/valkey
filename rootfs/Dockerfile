@@ -4,9 +4,9 @@ FROM registry.drycc.cc/drycc/base:${CODENAME}
 ARG DRYCC_UID=1001 \
   DRYCC_GID=1001 \
   DRYCC_HOME_DIR=/data \
-  VALKEY_VERSION="9.0.4" \
+  VALKEY_VERSION="9.1.3" \
   VALKEY_SENTINEL_PROXY_VERSION="2.0.1" \
-  REDIS_EXPORTER_VERSION="1.80.1"
+  REDIS_EXPORTER_VERSION="1.97.0"
 
 RUN groupadd drycc --gid ${DRYCC_GID} \
   && useradd drycc -u ${DRYCC_UID} -g ${DRYCC_GID} -s /bin/bash -m -d ${DRYCC_HOME_DIR}
